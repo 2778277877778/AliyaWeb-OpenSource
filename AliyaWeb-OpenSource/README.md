@@ -1,4 +1,4 @@
-# AliyaWeb
+# AliyaWeb · V1.1
 
 > **⚠️ 这是非官方的粉丝二次创作（同人改写）作品。**  
 > 基于 瞳电游工作室 的游戏 **《彼方的她 - Aliya》(Aliya: Timelink)** 改写而成，  
@@ -48,6 +48,27 @@
 
 ## 运行方式
 
+### Windows 一键启动（不想折腾 Node 就用这个）
+
+到 [Releases](../../releases) 下载 `AliyaWeb-Launcher.exe`（约 20 KB），放到项目根目录（与 `Web/`、`README.md` 同级），双击运行。它会按顺序自动做完：
+
+1. **找 Node.js** —— 系统里没装就下载便携版（约 36 MB，只放在项目内的 `.node-runtime/`，不写注册表、不要管理员权限）
+2. **装依赖** —— `npm install`，只装 express / axios / dotenv / cors 这几个生产依赖
+3. **配密钥** —— 提示你粘贴 DeepSeek API Key（输入不回显），写进 `Web/.env`；已经填过就不覆盖
+4. **起服务并开页面** —— 探测到 `http://localhost:5000/api/test` 通了，才用默认浏览器打开首页
+5. **停止** —— 关掉那个黑色命令行窗口，Node 进程跟着一起退出
+
+几件必须知道的：
+
+- 第一次运行需要联网（下载 Node 与依赖）。失败时窗口里保留 npm / 下载的原始报错，可对照下面的手动方式排查。
+- exe **没有代码签名**，Windows 会拦一次「SmartScreen 已阻止」→ 点「**更多信息**」→「**仍要运行**」。
+- 不信任 exe 的话可以本地自己编译：源码 [`tools/AliyaWebLauncher.cs`](./tools/AliyaWebLauncher.cs)，
+  用 Windows 自带的 `csc.exe` 就够（**不需要** Visual Studio 或 dotnet SDK），双击 [`tools/build.cmd`](./tools/build.cmd)。
+- 命令行参数：`--key=sk-xxx`（免交互）、`--port=5000`、`--no-browser`、`--skip-install`、`--no-download`、`--no-pause`。
+- 只支持 Windows x64；macOS / Linux 请用下面的手动方式。
+
+### 手动方式（macOS / Linux / 开发者）
+
 ```bash
 cd Web
 npm install
@@ -87,6 +108,10 @@ Web/
     │   └── position-adjust.js  # 右侧面板布局自适应
     └── system/            # 背景图、收音机、导航、音频（音乐在 music/soundtrack/）
 ```
+
+仓库根另有 `LICENSE` 与 `tools/`（Windows 启动器的源码和编译脚本）。
+用启动器跑过一次之后，项目里会多出两个**不要上传**的东西：根目录的 `.node-runtime/`（便携 Node，约 190 MB）
+和 `Web/.env`（里面有你的真实密钥）—— 两者都已经在 `.gitignore` 中，但**打包整个文件夹分享时它们不会被自动排除**。
 
 ## 实现要点
 
@@ -191,3 +216,20 @@ Web/data/transcripts/<会话ID>.jsonl      # 每行一个 {role, content, at}
   若想同时给模型保留近因，可以改成只压缩较早的 8 轮、留最后 2 轮原文  
   （调整 `server.js` 里传给 `splitMessagesByTurns` 的轮数即可）。
 - 会话以 JSON 明文存储，未包含任何加密或用户隔离，仅适合本地 / 个人使用。
+
+## 版本记录
+
+### V1.1
+
+- 新增 **Windows 一键启动程序**：自动补齐 Node 运行时与依赖、交互式写入 `Web/.env`、
+  探测到服务就绪后才打开浏览器；源码与 `build.cmd` 在 `tools/`，可自行编译。
+- `package.json` / `package-lock.json` 的 `license` 字段由 `ISC` 改为 `SEE LICENSE IN LICENSE`，
+  与本文声明的 CC BY-NC-SA 4.0 对齐。
+- `.gitignore` 补上 `.node-runtime/` 与 `tools/*.exe`。
+- 版本号 `1.0.0` → `1.1.0`。
+
+### V1.0
+
+- DeepSeek 驱动的 Aliya 对话；每满 10 轮递归压缩出的长期记忆；
+  只追加、永不裁剪的记忆档案（`Web/data/transcripts/`）；上下文面板与记忆导出；
+  游戏原声循环播放（7 首，可开关与调音量）；35 帧等待动画。
