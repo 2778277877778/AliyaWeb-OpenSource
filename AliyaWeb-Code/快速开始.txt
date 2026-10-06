@@ -1,0 +1,48 @@
+AliyaWeb 快速开始（Windows）
+================================
+
+1. 把本文件夹整体解压到任意位置（不要只把 exe 单独拷出来）。
+   桌面、D 盘都行，路径里可以有中文，但不要用只读目录或 C:\Program Files。
+
+2. 双击 AliyaWeb-Launcher.exe
+
+   Windows 可能拦一次「已保护你的电脑 / SmartScreen 已阻止启动」——
+   这是因为程序没有代码签名。点「更多信息」→「仍要运行」即可。
+
+3. 按提示粘贴你的 DeepSeek API Key（输入时不显示字符）。
+   还没有的话去 https://platform.deepseek.com/api_keys 申请；
+   这一行直接回车跳过也能打开网页，只是发消息会失败。
+
+4. 等它自己做完：准备 Node 运行时 -> 安装依赖 -> 启动服务 -> 自动打开浏览器。
+   依赖已随包提供，通常十几秒内完成；系统里没装 Node 时会多一步下载（约 36 MB）。
+
+5. 网页地址 http://localhost:5000/ 。黑色命令行窗口保持打开就是服务在跑，
+   关掉窗口即停止。
+
+想用手机或别的电脑访问？
+   命令行里执行：  AliyaWeb-Launcher.exe --lan
+   启动完成后窗口里会打印出 http://192.168.x.x:5000/ 这样的局域网地址。
+   注意：同网段的任何设备都能访问你的接口和聊天记录，用完请关掉窗口。
+
+其它参数（可选）
+   --port=5000      指定端口，被占用时自动顺延
+   --key=sk-xxx     免交互传入密钥
+   --no-browser     只起服务，不自动开浏览器
+   --no-download    禁止自动下载 Node
+   --skip-install   跳过 npm install
+   --no-pause       结束后不等待按键（脚本调用用）
+   --help           查看全部参数
+
+不想用这个 exe？
+   本机有 Node 环境的话，手动方式同样可以：
+       cd Web
+       npm install
+       copy .env.example .env     （然后编辑 .env 填入密钥）
+       npm start
+   启动器本身是开源的，源码在 tools/AliyaWebLauncher.cs，
+   双击 tools/build.cmd 就能用 Windows 自带的编译器重新生成 exe。
+
+更多说明（功能、协议、目录结构、API 文档）见 README.md。
+
+许可：代码与人设提示词为 CC BY-NC-SA 4.0（禁止商用）；
+      Web/public/system/ 下的游戏原声与美术素材版权归瞳电游工作室，仅供学习交流。
