@@ -1,0 +1,669 @@
+#chat-box {/*聊天框*/
+    background-color: rgb(44, 44, 44);
+    border-radius: 8px;
+    overflow-y: auto;
+    padding: 20px;
+    /* 移除原来的 margin-bottom */
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    width: auto;
+    /* 使用 flex-grow 占据所有可用空间 */
+    flex-grow: 1;
+    /* 确保高度自适应 */
+    height: auto;
+    /* 最小高度设置，避免过小 */
+    min-height: 0;
+    /* 添加滚动条透明样式 */
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.nav-box {/*导航栏*/
+    width: auto;
+    height: 38px;
+    background-color:rgb(50, 50, 50);
+    position: fixed;
+    top: 16px;
+    right: 15px;
+    left: 18px;
+    border-radius: 8px;
+}
+
+#warning {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 60%;
+    width: auto;
+}
+
+.wait-box {
+    /* 固定在右下角 */
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    /* 以高度为基准进行自适应 */
+    max-height: 25vh; /* 最大高度为视口高度的25% */
+    height: auto;
+    z-index: 1;
+}
+
+#wait {
+    /* 关键：以高度为基准，宽度自动计算以保持比例 */
+    height: 100%;
+    width: auto;
+    max-height: 25vh; /* 与容器保持一致的最大高度 */
+    display: block; /* 消除图片底部间隙 */
+}
+
+.wait {
+    /* 移除固定高度设置，由父容器控制 */
+    position: relative;
+    width: auto;
+    height: auto;
+    display: flex;
+}
+
+#wait_anmation {
+    /* 保持在图片内部居中 */
+    position: absolute;
+    top: 47%;
+    left: 51%;
+    transform: translate(-50%, -50%);
+    /* 动画大小相对于父容器（图片）的百分比 */
+    width: 75%;
+    height: auto;
+    z-index: 2;
+}
+
+#wait_anmation img {
+    /* 动画图片自适应容器大小 */
+    width: 100%;
+    height: auto;
+}
+
+#radio-box {
+    position: fixed;
+    height: 33vh;
+    right: 15px;
+}
+
+#radiobg {
+    height: 100%;
+    width: 100%;
+    border: none;
+    position: absolute;
+}
+
+#RadioContor {
+    /* 保持在图片内部居中 */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* 调整大小 */
+    width: 90%;
+    height: 90%;
+    z-index: 1;
+}
+
+/* ===================== 上下文面板 =====================
+   导航栏上的「上下文」按钮控制它展开/收起。
+   做成右侧抽屉（覆盖收音机区域），这样不用和已有的固定布局抢位置；
+   默认收起，只有主动点开时才占屏幕。 */
+/* 导航栏左侧的按钮组（上下文 / 设置） */
+.nav-left {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: calc(100% - 12px);
+}
+
+#ctx-toggle,
+#settings-toggle {
+    height: 100%;
+    padding: 0 14px;
+    border: 1px solid rgba(110, 231, 168, 0.45);
+    border-radius: 6px;
+    background: rgba(110, 231, 168, 0.16);
+    color: #8ff0bd;
+    font: 600 12px/1 system-ui, "Microsoft YaHei", sans-serif;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* 明确表示「可展开」 */
+#ctx-toggle::after,
+#settings-toggle::after {
+    content: ' ▾';
+    font-size: 10px;
+    opacity: 0.85;
+}
+
+#ctx-toggle:hover,
+#settings-toggle:hover {
+    background: rgba(110, 231, 168, 0.28);
+    border-color: rgba(110, 231, 168, 0.75);
+}
+
+#ctx-toggle[aria-expanded="true"],
+#settings-toggle[aria-expanded="true"] {
+    background: rgba(110, 231, 168, 0.34);
+    border-color: #6ee7a8;
+    color: #d6ffe9;
+}
+
+#ctx-toggle[aria-expanded="true"]::after,
+#settings-toggle[aria-expanded="true"]::after {
+    content: ' ▴';
+}
+
+#ctx-panel {
+    position: fixed;
+    top: 62px;
+    right: 15px;
+    bottom: 15px;
+    width: 340px;
+    max-width: calc(100vw - 48px);
+    display: flex;
+    flex-direction: column;
+    background: rgb(32, 34, 33);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+    z-index: 20;
+    overflow: hidden;
+    /* 收起状态 */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(10px);
+    transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+    pointer-events: none;
+}
+
+#ctx-panel.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+    pointer-events: auto;
+}
+
+#ctx-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#ctx-head h3 {
+    margin: 0;
+    font: 600 13px/1 system-ui, "Microsoft YaHei", sans-serif;
+    color: #dfe7e2;
+}
+
+#ctx-close {
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #9aa5a0;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+#ctx-close:hover {
+    background: rgba(255, 255, 255, 0.10);
+    color: #ffffff;
+}
+
+#ctx-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.ctx-stats {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.ctx-stat {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 12px;
+    color: #9aa5a0;
+}
+
+.ctx-stat b {
+    color: #dfe7e2;
+    font-weight: 600;
+}
+
+.ctx-h4 {
+    margin: 0 0 6px;
+    font: 600 12px/1 system-ui, "Microsoft YaHei", sans-serif;
+    color: #8fa39a;
+}
+
+.ctx-summary {
+    margin: 0 0 10px;
+    padding: 10px;
+    background: rgba(110, 231, 168, 0.07);
+    border-left: 2px solid rgba(110, 231, 168, 0.55);
+    border-radius: 4px;
+    font: 400 12.5px/1.6 system-ui, "Microsoft YaHei", sans-serif;
+    color: #d7e2dc;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.ctx-hint {
+    margin: 0 0 10px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #9aa5a0;
+}
+
+.ctx-hint code {
+    display: inline-block;
+    margin-top: 2px;
+    padding: 2px 4px;
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 3px;
+    font: 11px/1.4 ui-monospace, Consolas, monospace;
+    color: #cfd8d3;
+    word-break: break-all;
+}
+
+.ctx-error {
+    color: #ff9b9b;
+}
+
+#ctx-foot {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ctx-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.ctx-actions button {
+    flex: 1;
+}
+
+#ctx-export,
+#ctx-download {
+    padding: 7px 10px;
+    border: none;
+    border-radius: 6px;
+    font: 600 12px/1 system-ui, "Microsoft YaHei", sans-serif;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s ease;
+}
+
+/* 下载是主要动作：把完整记忆存到自己机器上 */
+#ctx-download {
+    background: rgba(110, 231, 168, 0.22);
+    color: #8ff0bd;
+}
+
+#ctx-download:hover:not(:disabled) {
+    background: rgba(110, 231, 168, 0.32);
+}
+
+/* 导出到服务器 data/ 是次要动作 */
+#ctx-export {
+    background: rgba(255, 255, 255, 0.07);
+    color: #b9c6c0;
+}
+
+#ctx-export:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+#ctx-export:disabled,
+#ctx-download:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.ctx-note {
+    font-size: 11px;
+    color: #7d8883;
+}
+
+/* ===================== 设置面板 =====================
+   与「上下文」面板同款右侧抽屉；两者互斥，不会同时展开。
+   音乐相关的开关/音量都在这里，主界面其余部分不变。 */
+#settings-panel {
+    position: fixed;
+    top: 62px;
+    right: 15px;
+    width: 320px;
+    max-width: calc(100vw - 48px);
+    display: flex;
+    flex-direction: column;
+    background: rgb(32, 34, 33);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+    z-index: 20;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(10px);
+    transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+    pointer-events: none;
+}
+
+#settings-panel.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+    pointer-events: auto;
+}
+
+#settings-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#settings-head h3 {
+    margin: 0;
+    font: 600 13px/1 system-ui, "Microsoft YaHei", sans-serif;
+    color: #dfe7e2;
+}
+
+#settings-close {
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #9aa5a0;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+#settings-close:hover {
+    background: rgba(255, 255, 255, 0.10);
+    color: #ffffff;
+}
+
+#settings-body {
+    padding: 12px;
+    overflow-y: auto;
+}
+
+.set-h4 {
+    margin: 0 0 8px;
+    font: 600 12px/1 system-ui, "Microsoft YaHei", sans-serif;
+    color: #8fa39a;
+}
+
+.set-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: #cfd8d3;
+}
+
+.set-row.set-col {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+}
+
+.set-row b {
+    color: #6ee7a8;
+}
+
+#set-music-enabled {
+    width: 16px;
+    height: 16px;
+    accent-color: #6ee7a8;
+    cursor: pointer;
+}
+
+/* 音量滑块 */
+#set-volume {
+    width: 100%;
+    height: 4px;
+    appearance: none;
+    -webkit-appearance: none;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.14);
+    outline: none;
+    cursor: pointer;
+}
+
+#set-volume::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #6ee7a8;
+    box-shadow: 0 0 6px rgba(110, 231, 168, 0.7);
+    cursor: pointer;
+}
+
+#set-volume::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border: none;
+    border-radius: 50%;
+    background: #6ee7a8;
+    cursor: pointer;
+}
+
+/* 当前曲目 */
+.set-track {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.set-track span {
+    flex: 1;
+    text-align: center;
+    font: 600 12px/1.3 system-ui, "Microsoft YaHei", sans-serif;
+    color: #dfe7e2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.set-track button {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #b9c6c0;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.set-track button:hover {
+    background: rgba(110, 231, 168, 0.22);
+    color: #8ff0bd;
+}
+
+.set-note {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.6;
+    color: #7d8883;
+}
+ 
+/* 聊天容器样式 */
+#chat-container {
+    width: auto;
+    height: auto;
+    position: fixed;
+    bottom: 15px;
+    left: 18px;
+    /* 通过 JS 动态设置 right 值 */
+    top: 73px;
+    background-color: rgb(44, 44, 44);
+    /* 添加 flex 布局 */
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px;
+    /* 可添加内边距 */
+    padding: 0;
+}
+        
+/* 消息容器样式 - 包装每条消息 */
+.message-container {
+    display: flex; /* 使用弹性布局 */
+    width: 100%; /* 占据全部宽度 */
+}
+        
+/* 用户消息容器 - 右对齐 */
+.user-container {
+    justify-content: flex-end; /* 内容右对齐 */
+}
+        
+/* AI消息容器 - 左对齐 */
+.ai-container {
+    justify-content: flex-start; /* 内容左对齐 */
+}
+
+/* 消息气泡基本样式 */
+.message {
+    padding: 12px 18px; /* 内边距 */
+    border-radius: 20px; /* 圆角，创造气泡效果 */
+    max-width: 75%; /* 最大宽度限制，防止过长消息 */
+    animation: fadeIn 0.4s ease-out; /* 淡入动画 */
+    position: relative; /* 相对定位 */
+    word-wrap: break-word; /* 允许长单词换行 */
+    line-height: 1.5; /* 行高，提高可读性 */
+}
+        
+/* 用户消息气泡特定样式 */
+.user-message {
+    background: rgba(255, 255, 255, 0.12); /* 半透明背景 */
+    color: #cccccc; /* 文字颜色 */
+    text-align: right; /* 文字右对齐 */
+}
+        
+/* AI消息气泡特定样式 */
+.ai-message {
+    background: rgba(255, 255, 255, 0.12); /* 半透明背景 */
+    text-align: left; /* 文字左对齐 */
+    color: #cccccc; /* 文字颜色 */
+}
+        
+/* 消息淡入动画定义 */
+@keyframes fadeIn {
+    from { 
+        opacity: 0; /* 开始状态：完全透明 */
+        transform: translateY(12px) scale(0.95); /* 向下偏移并稍微缩小 */
+    }
+    to { 
+        opacity: 1; /* 结束状态：完全不透明 */
+        transform: translateY(0) scale(1); /* 回到原始位置和大小 */
+    }
+}
+
+/* 输入区域样式 */
+#input-area {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    /* 添加顶部外边距分隔输入区域 */
+    margin-top: 10px;
+    /* 输入区域不伸缩，保持内容高度 */
+    flex-shrink: 0;
+}
+        
+/* 输入框样式 */
+#user-input {
+    height: 5px;
+    flex-grow: 1; /* 占据剩余空间 */
+    padding: 14px 20px; /* 内边距 */
+    border-color: black; /* 边框颜色 */
+    border-radius: 28px; /* 圆角 */
+    outline: none; /* 移除焦点轮廓 */
+    color: #000000; /* 文字颜色 */
+    font-size: 16px; /* 字体大小 */
+    transition: all 0.3s ease; /* 平滑过渡效果 */
+    background: rgba(236, 233, 233, 0.14);
+}
+
+/* 输入框获得焦点时的样式(如需框选以下代码ctrl+/，然后删除白字) 
+#user-input:focus {
+    box-shadow: 0 0 6px rgba(136, 136, 136, 0.5);  发光边框效果
+}
+*/
+
+/* 输入框占位符文字样式 */
+#user-input::placeholder {
+    color: rgb(53, 51, 51);
+}
+        
+/* 发送按钮样式 */
+#send-btn {
+    height: 35px;
+    padding: 14px 26px; /* 内边距 */
+    background-color: rgb(236, 233, 233, 0.14);
+    color: rgb(38, 36, 36); /* 文字颜色 */
+    border: none; /* 无边框 */
+    border-radius: 28px; /* 圆角 */
+    cursor: pointer; /* 鼠标指针变为手型 */
+    font-weight: bold; /* 粗体文字 */
+    transition: all 0.3s ease; /* 平滑过渡效果 */
+    text-align: center;
+    line-height: 10px;
+}
+        
+/* 发送按钮悬停状态样式(如需框选以下代码ctrl+/，然后删除白字)
+#send-btn:hover {
+    transform: translateY(-3px);  向上移动 
+    box-shadow: 0 6px 6px rgba(136, 136, 136, 0.5);  阴影 
+}
+ */
+/* 发送按钮按下状态样式 */
+#send-btn:active {
+    transform: translateY(-3px); /* 轻微向上移动 */
+}
+        
+/* 发送按钮禁用状态样式 */
+#send-btn:disabled {
+    background: rgba(255, 255, 255, 0.15); /* 灰色背景 */
+    color: rgba(255, 255, 255, 0.5); /* 半透明文字 */
+    transform: none; /* 无变换 */
+    box-shadow: none; /* 无阴影 */
+    cursor: not-allowed; /* 禁用指针 */
+}
+

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aliya_测试</title>
+    <link rel="stylesheet" href="./web.css">
+</head>
+<body style="background-color: rgb(35, 35, 35); margin: 0;">
+    <!--bottom-->
+    <div id="bottomcontainer">
+        <!-- <script src="./JS/bottom.js"></script> -->
+    </div>
+    
+    <!--整体布局-->
+    <div class="information-box">
+    <!-- 调整容器结构，确保正确的层级关系 -->
+        <div id="radio-box">
+            <img id="radiobg" src="./system/radio/bg_remake_0.png" alt="收音机背景图" decoding="async" fetchpriority="low">
+            <div class="RightMiddleFrame">
+                <img id="RadioContor" src="./system/radio/RightMiddleFrame.png" alt="收音机控制背景图" decoding="async" fetchpriority="low">
+            </div>
+        </div>
+        <div class="wait-box">
+            <div class="wait">
+                <!-- PlayerChoice图片作为背景 -->
+                <img id="wait" src="./system/wait/PlayerChoice.png" alt="选择器背景图" fetchpriority="high" decoding="async">
+                <!-- 动画容器 - 将在图片内部居中 -->
+                <div id="wait_anmation"></div>
+            </div>
+        </div> 
+    </div>
+    <div class="nav-box">
+        <div class="nav-left">
+            <button id="ctx-toggle" type="button" aria-expanded="false" aria-controls="ctx-panel"
+                    title="查看长期记忆与完整记忆档案（可下载成 .md）">上下文</button>
+            <button id="settings-toggle" type="button" aria-expanded="false" aria-controls="settings-panel"
+                    title="设置：游戏原声的开关与音量">设置</button>
+        </div>
+        <img id="warning" src="./system/nav/warningBlack.png" alt="警报" decoding="async" fetchpriority="low">
+    </div>
+
+    <!-- 上下文面板（可折叠）：展示后端已算好的「长期记忆」与上下文状态，并可导出成文件 -->
+    <section id="ctx-panel" aria-label="上下文总结">
+        <header id="ctx-head">
+            <h3>上下文总结</h3>
+            <button id="ctx-close" type="button" aria-label="收起">×</button>
+        </header>
+        <div id="ctx-body"></div>
+        <footer id="ctx-foot">
+            <div class="ctx-actions">
+                <button id="ctx-download" type="button">下载记忆 .md</button>
+                <button id="ctx-export" type="button">导出到 data/</button>
+            </div>
+            <span class="ctx-note">完整档案只追加，压缩不会删掉它</span>
+        </footer>
+    </section>
+
+    <!-- 设置面板（可折叠）：游戏原声的开关与音量。与「上下文」抽屉互斥，不会同时盖住画面 -->
+    <section id="settings-panel" aria-label="设置">
+        <header id="settings-head">
+            <h3>设置</h3>
+            <button id="settings-close" type="button" aria-label="收起">×</button>
+        </header>
+        <div id="settings-body">
+            <h4 class="set-h4">游戏原声</h4>
+            <div class="set-row">
+                <label for="set-music-enabled">播放音乐</label>
+                <input type="checkbox" id="set-music-enabled" checked>
+            </div>
+            <div class="set-row set-col">
+                <label for="set-volume">音量 <b id="set-volume-num">35</b>%</label>
+                <input type="range" id="set-volume" min="0" max="100" step="1" value="35">
+            </div>
+            <div class="set-row set-col">
+                <span>当前曲目</span>
+                <div class="set-track">
+                    <button id="set-prev" type="button" title="上一首">◀</button>
+                    <span id="set-track-name">Aliya</span>
+                    <button id="set-next" type="button" title="下一首">▶</button>
+                </div>
+                <span class="set-note" id="set-track-pos">1 / 7</span>
+            </div>
+            <p class="set-note">收音机没对上频道时会有白噪音，音乐会自动压低（闪避），对上频道后恢复。<br>
+                曲目取自游戏原声包《AliyaSoundtrack》，共 7 首循环播放。</p>
+        </div>
+    </section>
+
+    <div id="chat-container">
+        <div id="chat-box">
+            <div class="typing-indicator" id="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        <div id="input-area">
+            <input type="text" id="user-input" placeholder="向Aliya发送消息..." autocomplete="off">
+            <button id="send-btn" onclick="sendMessage()">发送</button>
+        </div>
+    </div>
+
+<!-- 动画脚本放在body底部，确保DOM加载完成 -->
+<script src="./JS/wait.js"></script>
+
+<!-- 游戏原声播放器（7 首循环），并暴露 window.AliyaAudio -->
+ <script src="./JS/music.js"></script>
+
+<!-- 上下文面板：展示后端已算好的长期记忆，并支持导出成文件 -->
+<script src="./JS/ctx-panel.js"></script>
+
+<!-- 设置面板：游戏原声的开关与音量（依赖 music.js 暴露的 window.AliyaAudio） -->
+<script src="./JS/settings.js"></script>
+
+<!-- 添加位置调整脚本 -->
+<script src="./JS/position-adjust.js"></script>
+
+<!-- 核心聊天功能脚本 -->
+<script>
+// 获取DOM元素
+const userInputEl = document.getElementById('user-input');
+const chatBoxEl = document.getElementById('chat-box');
+const sendBtnEl = document.getElementById('send-btn');
+const typingIndicator = document.getElementById('typing-indicator');
+// 加载消息提示音
+let msg = null;
+let audioCanPlay = false;
+
+msg = new Audio('./system/msg.ogg');
+msg.preload = 'auto';
+msg.volume = 0.4;   
+msg.loop = false;
+msg.addEventListener('canplaythrough', () => {
+    audioCanPlay = true;
+    console.log('消息音频预加载完成');
+});
+
+// 让输入框支持按回车发送
+userInputEl.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        sendMessage();
+    }
+});
+
+// 生成唯一的会话ID
+function generateSessionId() {
+    return 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+}
+
+// 从本地存储获取或创建会话ID
+function getOrCreateSessionId() {
+    let sessionId = localStorage.getItem('chatSessionId');
+    if (!sessionId) {
+        sessionId = generateSessionId();
+        localStorage.setItem('chatSessionId', sessionId);
+    }
+    return sessionId;
+}
+
+// 创建会话信息显示元素
+function createSessionInfoElement() {
+    const infoElement = document.createElement('div');
+    infoElement.id = 'session-info';
+    infoElement.style.cssText = `
+        text-align: center; 
+        color: black; 
+        margin: 10px 0; 
+        font-size: 14px;
+        opacity: 0.8;
+    `;
+    document.getElementById('chat-container').insertBefore(infoElement, document.getElementById('input-area'));
+    return infoElement;
+}
+
+// 打开右侧「上下文 / 记忆档案」面板。
+// 面板默认是收起的，这里是除导航栏按钮之外的第二个入口 ——
+// 只有一个不显眼的入口很容易让人找不到。
+function openContextPanel() {
+    if (window.AliyaCtx && typeof window.AliyaCtx.open === 'function') {
+        window.AliyaCtx.open();
+    }
+}
+
+// 更新会话信息显示
+function updateSessionInfo(messageCount, tokens) {
+    const infoElement = document.getElementById('session-info') || createSessionInfoElement();
+    infoElement.innerHTML = `
+        对话轮次: ${messageCount} | 
+        估算Token: ${tokens} |
+        <button onclick="openContextPanel()" title="查看长期记忆，并下载完整记忆档案" style="margin-left: 10px; background: rgba(255, 255, 255, 0.1); color: black; border: 1px solid black; border-radius: 12px; padding: 4px 12px; cursor: pointer; font-size: 12px; transition: all 0.3s ease;">记忆档案</button>
+        <button onclick="clearSession()" style="margin-left: 10px; background: rgba(255, 255, 255, 0.1); color: black; border: 1px solid black; border-radius: 12px; padding: 4px 12px; cursor: pointer; font-size: 12px; transition: all 0.3s ease;">清空对话</button>
+    `;
+
+    // 顺手刷新上下文面板（面板没打开时是空操作）
+    if (window.AliyaCtx && typeof window.AliyaCtx.onSessionInfo === 'function') {
+        window.AliyaCtx.onSessionInfo(messageCount, tokens);
+    }
+}
+
+// 清空会话功能
+async function clearSession() {
+    const sessionId = getOrCreateSessionId();
+    
+    try {
+        const response = await fetch(`/api/session/${sessionId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            // 生成新的会话ID
+            const newSessionId = generateSessionId();
+            localStorage.setItem('chatSessionId', newSessionId);
+            
+            // 清空聊天显示（保留第一条欢迎消息）
+            const chatBox = document.getElementById('chat-box');
+            const welcomeMessage = chatBox.querySelector('.ai-message');
+            chatBox.innerHTML = '';
+            if (welcomeMessage) {
+                const containerDiv = document.createElement('div');
+                containerDiv.classList.add('message-container', 'ai-container');
+                containerDiv.appendChild(welcomeMessage);
+                chatBox.appendChild(containerDiv);
+            }
+            
+            // 重置会话信息
+            updateSessionInfo(1, 0);
+            
+            appendMessage('ai', '对话已重置，我们可以重新开始聊天了！', false);
+        }
+    } catch (error) {
+        console.error('清空会话失败:', error);
+        appendMessage('ai', '清空对话时出现了问题，请稍后重试。', false);
+    }
+}
+
+// 核心函数：发送消息到后端API
+async function sendMessage() {
+    const userMessage = userInputEl.value.trim();
+    if (!userMessage) return;
+
+    // 禁用按钮和输入框，防止重复发送
+    sendBtnEl.disabled = true;
+    userInputEl.disabled = true;
+
+    const sessionId = getOrCreateSessionId();
+
+    // 将用户消息立即显示在聊天框中
+    appendMessage('user', userMessage, false);
+    userInputEl.value = ''; // 清空输入框
+    
+    // 显示输入指示器
+    typingIndicator.style.display = 'block';
+    chatBoxEl.scrollTop = chatBoxEl.scrollHeight;
+
+    try {
+        // 使用fetch API向后端服务器发送POST请求
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                message: userMessage,
+                sessionId: sessionId
+            })
+        });
+
+        // 首先检查响应状态
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('错误响应内容:', errorText);
+            
+            if (response.status === 405) {
+                throw new Error(`方法不被允许 (405)。请检查：\n1. 后端服务器是否重启\n2. 路由是否正确定义\n3. 是否有其他服务器占用端口`);
+            }
+            throw new Error(`HTTP错误! 状态码: ${response.status}`);
+        }
+
+        // 检查响应内容类型
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('接收到非JSON响应:', text.substring(0, 500));
+            throw new Error('服务器返回了非JSON格式的响应');
+        }
+
+        // 现在安全地解析JSON
+        const data = await response.json();
+        console.log('成功接收到响应:', data);
+
+        // 处理AI回复 - 按反斜线分割成多条消息
+        processAIResponse(data.reply);
+        
+        // 更新会话信息
+        if (data.messageCount && data.estimatedTokens) {
+            updateSessionInfo(data.messageCount, data.estimatedTokens);
+        }
+        
+    } catch (error) {
+        console.error('请求失败:', error);
+        // 向用户显示友好的错误信息
+        appendMessage('ai', `❌ 请求失败: ${error.message}`, false);
+    } finally {
+        // 无论成功失败，都重新启用按钮和输入框
+        sendBtnEl.disabled = false;
+        userInputEl.disabled = false;
+        userInputEl.focus(); // 让输入框重新获得焦点
+        
+        // 隐藏输入指示器
+        typingIndicator.style.display = 'none';
+    }
+}
+
+// 处理AI回复，按反斜线分割成多条消息
+function processAIResponse(reply) {
+    // 检查回复中是否包含反斜线
+    if (reply.includes('/')) {
+        // 按反斜线分割回复
+        const parts = reply.split('/').filter(part => part.trim() !== '');
+
+        // 为每个部分添加轻微延迟，创造更自然的对话流
+        parts.forEach((part, index) => {
+            setTimeout(() => {
+                appendMessage('ai', part.trim(), index > 0);
+            }, index * 1000); // 每条消息间隔1秒
+        });
+    } else {
+        // 如果没有反斜线，直接显示整个回复
+        appendMessage('ai', reply, false);
+    }
+}
+
+// 辅助函数：将消息追加到聊天框
+function appendMessage(sender, text, isContinued) {
+    // 创建消息容器
+    const containerDiv = document.createElement('div');
+    containerDiv.classList.add('message-container');
+    containerDiv.classList.add(sender === 'user' ? 'user-container' : 'ai-container');
+    
+    // 创建消息气泡
+    const messageDiv = document.createElement('div');
+    messageDiv.classList.add('message');
+    messageDiv.classList.add(sender === 'user' ? 'user-message' : 'ai-message');
+    messageDiv.textContent = text;
+    
+    // 将消息气泡添加到容器
+    containerDiv.appendChild(messageDiv);
+    
+    // 将容器添加到聊天框
+    chatBoxEl.appendChild(containerDiv);
+
+    // 确保输入指示器在底部
+    chatBoxEl.appendChild(typingIndicator);
+    
+    // 自动滚动到底部
+    chatBoxEl.scrollTop = chatBoxEl.scrollHeight;
+
+    // 播放消息提示音
+    if (sender === 'ai') {
+        msg.currentTime = 0;
+        msg.play().catch(e => console.log("消息音频播放失败:", e));
+    }
+}
+
+// 在页面加载时初始化
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化会话信息显示
+    createSessionInfoElement();
+    updateSessionInfo(0, 0);
+    
+    // 添加欢迎消息
+    setTimeout(() => {
+        appendMessage('ai', '嗨COSMOS，好久不见', false);
+        updateSessionInfo(1, 0);
+    }, 500);
+});
+    </script>
+</body>
+</html>
